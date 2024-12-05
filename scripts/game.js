@@ -1,10 +1,35 @@
 //const gameOverOverlayElement = document.getElementById("game-over");
 
+function resetGameStatus() {
+  activePlayer = 0;
+  currentRound = 1;
+  gameIsOver = false;
+  gameOverElement.firstElementChild.innerHTML =
+    'You won, <span id="winner-name">Player Name</span>!';
+  gameOverElement.style.display = "none";
+
+  let gameBoardIndex = 0;
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      // Korrigierter Loop
+      gameData[i][j] = 0;
+      const gameBoardItemElement = gameBoardElement.children[gameBoardIndex];
+      gameBoardItemElement.textContent = ""; // Spielfeld leeren
+      gameBoardItemElement.classList.remove("disabled"); // Deaktivierung entfernen
+      gameBoardIndex++;
+    }
+  }
+}
+
 function startNewGame() {
   if (players[0].name === "" || players[1].name === "") {
     alert("Please set Custom Playernames");
     return;
   }
+
+  resetGameStatus();
+
+  activePlayerNameElement.textContent = players[activePlayer].name;
   gameAreaElement.style.display = "block";
 }
 
@@ -17,8 +42,23 @@ function switchPlayer() {
   activePlayerNameElement.textContent = players[activePlayer].name;
 }
 
+function showWinner(winnerId) {
+  gameIsOver = true;
+  const gameOverText = document.getElementById("game-over").firstElementChild;
+
+  if (winnerId > 0) {
+    gameOverText.firstElementChild.textContent = `${
+      players[winnerId - 1].name
+    } wins!`;
+  } else if (winnerId === -1) {
+    gameOverText.firstElementChild.textContent = "It's a draw!";
+  }
+
+  gameOverElement.style.display = "block";
+}
+
 function selectGameField(event) {
-  if (event.target.tagName !== "LI") {
+  if (event.target.tagName !== "LI" || gameIsOver) {
     return;
   }
 
@@ -36,11 +76,13 @@ function selectGameField(event) {
 
   gameData[selectedRow][selectedColumn] = activePlayer + 1;
 
-  console.log(gameData);
-  const winnedId = checkForGameOver();
-  console.log(winnedId);
-  currentRound++;
+  const winnerId = checkForGameOver();
+  if (winnerId > 0 || winnerId === -1) {
+    showWinner(winnerId);
+    return; // Spiel ist vorbei, kein Wechsel des Spielers mehr nötig
+  }
   switchPlayer();
+  currentRound++;
 }
 
 function checkForGameOver() {
